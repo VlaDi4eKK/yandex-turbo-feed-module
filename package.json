@@ -1,11 +1,11 @@
 {
   "name": "yandex-turbo-feed-module",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "",
   "license": "MIT",
   "contributors": [
     {
-      "name": "vladi4ekk <vladi4ekk@live.ru>"
+      "name": "vladi4ekk <samolovov.vladislav.dev@gmail.com>"
     }
   ],
   "main": "lib/module.js",
@@ -31,7 +31,6 @@
   },
   "dependencies": {
     "async-cache": "^1.1.0",
-    "consola": "^1.2.0",
     "fs-extra": "latest",
     "pify": "^3.0.0",
     "turbo-rss": "^1.0.8"

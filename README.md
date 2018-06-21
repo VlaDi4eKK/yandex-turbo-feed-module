@@ -19,15 +19,14 @@
 
 - Add `yandex-turbo-feed-module` dependency using yarn or npm to your project
 - Add `yandex-turbo-feed-module` to `modules` section of `nuxt.config.js`
+- Add `yandexTurboFeed` method to `nuxt.config.js`
 
 ```js
 {
   modules: [
-    // Simple usage
+    //...   
     'yandex-turbo-feed-module',
-
-    // With options
-    ['yandex-turbo-feed-module', { /* module options */ }],
+    //...
  ]
 }
 ```
@@ -42,16 +41,17 @@ So.. how to get these feeds working now?
 
 ```js
 {
- //...
- 'yandex-turbo-feed-module': [
-   // A default feed configuration object
-   {
-     path: '/turbo-feed.xml', // The route to your feed.
-     async create (feed) {}, // The create function (see below)
-     cacheTime: 1000 * 60 * 15, // How long should the feed be cached
-   }
- ],
- //...
+  modules: [ ... ],
+  //...
+  yandexTurboFeed: { // A default feed configuration object
+    path: '/turbo-feed.xml', // The route to your feed.
+    link: 'http://example.com/',
+    cacheTime: 1000 * 60 * 15, // How long should the feed be cached
+    title: 'Title turbo feed',
+    description: 'Description turbo feed',
+    async create (feed) { ... } // The create function (see below)
+  },
+  //...
 }
 ```
 
@@ -63,73 +63,39 @@ actually modifies your upcoming feed.
 A simple create function could look like this:
 
 ```js
-create = async feed => {
-  feed.options = {
-    title: 'title',
-    description: 'description',
-    link: 'http://example.com'
-  }
+//...
+yandexTurboFeed: {
+  //...
+  async create (feed) {
+    const articles = await getArticles(); // Your method for obtaining a list of articles
   
-  const posts = await axios.get('https://blog.lichter.io/posts/').data
-  posts.forEach(post => { 
-    feed.item({
-        title: post.title,
-        id: post.url,
-        link: post.url,
-        description: post.description,
-        content: post.content
-  })
+    articles.forEach(article => {
+      feed.item({
+        title: article.title,
+        id: article.id,
+        link: `http://example.com/articles/${article.slug}/`,
+        description: article.description,
+        date: new Date(article.datetime_publications),
+        content: article.content
+      })
+    });
+  }
+}
+```
+
+### getArticle example function
+
+```js
+const axios = require('axios');
+
+async function getArticles() {
+  return await axios.get('http://example.com/articles/').then(res => { return res.data });
 }
 ```
 
 Feed creation is based on the [turbo-rss](https://github.com/LightAir/turbo-rss) package.
 Please use it as reference and further documentation for modifying the `feed` object
 that is passed to the `create` function.
-
-Using the `create` function gives you almost unlimited possibilities to customize your feed!
-
-### Using a feed factory function
-
-There is one more thing. Imagine you want to add a feed per blog category, but you don't want
-to add every category by hand.
-
-You can use a `factory function` to solve that problem. Instead of a hardcoded array, you can setup
-a function that will be called up on feed generation. The function **must** return an array with all
-feeds you want to generate.
-
-```js
-{
- 'yandex-turbo-feed-module': async () => {
-     const posts = (await axios.get('https://my-url.com/posts')).data
-     const tags = (await axios.get('https://my-url.com/tags')).data
-     
-     return tags.map(t => {
-       const relevantPosts = posts.filter(/*filter posts somehow*/)
- 
-       return {
-         path: `/${t.slug}.xml`, // The route to your feed.
-         async create (feed) {
-           feed.options = {
-             title: `${t.name} - My blog`,
-             description: `All posts related to ${t.name} of my blog`,
-           }
- 
-           relevantPosts.forEach(post => {
-             feed.addItem({
-               title: post.title,
-               id: post.id,
-               link: `https://blog.lichter.io/posts/${post.slug}`,
-               description: post.excerpt,
-               content: post.text
-             })
-           })
-         },
-         cacheTime: 1000 * 60 * 15,
-       }
-     })
-   },
-}
-```
 
 
 ## Development
